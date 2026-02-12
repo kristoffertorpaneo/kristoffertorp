@@ -9,7 +9,7 @@ load_dotenv()
 client = WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
 
 # --- KONFIGURASJON ---
-DAYS_INACTIVE = 30
+DAYS_INACTIVE = 90
 MY_USER_ID = "U05R136AFNJ" # Husk din personlige medlems-ID
 WHITELIST = ["general", "announcements", "random"]
 # ----------------------
