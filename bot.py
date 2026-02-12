@@ -10,7 +10,7 @@ client = WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
 
 # --- KONFIGURASJON ---
 DAYS_INACTIVE = 30
-MY_USER_ID = "U05R136AFNJ" # Erstatt med din medlems-ID
+MY_USER_ID = "U05R136AFNJ" # Husk din personlige medlems-ID
 WHITELIST = ["general", "announcements", "random"]
 # ----------------------
 
@@ -53,28 +53,27 @@ def get_inactive_channels():
             if not channel["is_member"]:
                 client.conversations_join(channel=c_id)
 
-            # Henter de siste 10 meldingene for å finne et menneske
+            # Henter de siste 10 meldingene
             history = client.conversations_history(channel=c_id, limit=10)
             messages = history.get("messages", [])
             
             last_human_date = None
             
             for msg in messages:
-                # FILTER: Ignorer hvis det er en bot eller en system-event (subtype)
                 is_bot = "bot_id" in msg or msg.get("user") == "USLACKBOT"
                 is_system = msg.get("subtype") is not None 
                 
                 if not is_bot and not is_system:
                     last_human_date = datetime.fromtimestamp(float(msg["ts"]))
-                    break # Fant den nyeste menneskelige meldingen, stopper her.
+                    break
 
             if last_human_date:
                 if last_human_date < threshold:
+                    # HER ER FIKSEN: Vi definerer days_ago rett før den brukes
                     days_ago = (datetime.now() - last_human_date).days
                     report.append(f"• <#{c_id}>: {days_ago} dager siden sist et *menneske* skrev noe.")
             else:
-                # Ingen menneskelige meldinger blant de siste 10
-                report.append(f"• <#{c_id}>: {days_ago} dager siden sist et *menneske* skrev noe.")
+                report.append(f"• <#{c_id}>: Ingen menneskelig aktivitet funnet nylig (kun botter/system).")
                 
         except SlackApiError as e:
             print(f"Kunne ikke sjekke #{c_name}: {e.response['error']}")
@@ -86,12 +85,11 @@ def send_report():
     
     if inactive_list:
         header = f"🚀 *Smart Rapport: Inaktive kanaler (> {DAYS_INACTIVE} dager)*\n"
-        header += "_Botter og systemmeldinger er filtrert ut._\n\n"
+        header += "_Klikk på kanalnavnet for å gå rett til kanalen._\n\n"
         
-        # Hvis listen er for lang for én melding, deler vi den opp
         current_chunk = header
         for entry in inactive_list:
-            if len(current_chunk) + len(entry) > 3500: # Slack grense er ca 4000
+            if len(current_chunk) + len(entry) > 3500:
                 client.chat_postMessage(channel=MY_USER_ID, text=current_chunk)
                 current_chunk = ""
             current_chunk += entry + "\n"
@@ -99,7 +97,7 @@ def send_report():
         client.chat_postMessage(channel=MY_USER_ID, text=current_chunk)
         print("Rapport sendt!")
     else:
-        client.chat_postMessage(channel=MY_USER_ID, text="✅ Fant ingen inaktive kanaler med de valgte kriteriene.")
+        client.chat_postMessage(channel=MY_USER_ID, text="✅ Fant ingen inaktive kanaler.")
 
 if __name__ == "__main__":
     send_report()
