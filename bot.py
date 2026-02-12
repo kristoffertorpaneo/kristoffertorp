@@ -71,10 +71,10 @@ def get_inactive_channels():
             if last_human_date:
                 if last_human_date < threshold:
                     days_ago = (datetime.now() - last_human_date).days
-                    report.append(f"• *#{c_name}*: {days_ago} dager siden sist et *menneske* skrev noe.")
+                    report.append(f"• <#{c_id}>: {days_ago} dager siden sist et *menneske* skrev noe.")
             else:
                 # Ingen menneskelige meldinger blant de siste 10
-                report.append(f"• *#{c_name}*: Ingen menneskelig aktivitet funnet nylig (kun botter/system).")
+                report.append(f"• <#{c_id}>: {days_ago} dager siden sist et *menneske* skrev noe.")
                 
         except SlackApiError as e:
             print(f"Kunne ikke sjekke #{c_name}: {e.response['error']}")
